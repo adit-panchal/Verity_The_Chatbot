@@ -1,0 +1,331 @@
+/* Delete Confirmation Modal Overlay */
+.delete-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Card */
+.delete-modal-card {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.9) 100%
+  );
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 40px;
+  max-width: 480px;
+  width: 90%;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  position: relative;
+  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-align: center;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .delete-modal-card {
+    background: linear-gradient(
+      135deg,
+      rgba(30, 30, 40, 0.98) 0%,
+      rgba(20, 20, 30, 0.95) 100%
+    );
+    box-shadow:
+      0 20px 60px rgba(0, 0, 0, 0.6),
+      0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* Close Button */
+.delete-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #666;
+}
+
+.delete-modal-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  transform: rotate(90deg);
+  color: #333;
+}
+
+@media (prefers-color-scheme: dark) {
+  .delete-modal-close {
+    background: rgba(255, 255, 255, 0.05);
+    color: #aaa;
+  }
+
+  .delete-modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+}
+
+/* Warning Icon */
+.delete-modal-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 24px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  animation: pulse 2s ease-in-out infinite;
+  box-shadow: 0 8px 24px rgba(255, 107, 107, 0.3);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 8px 24px rgba(255, 107, 107, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 12px 32px rgba(255, 107, 107, 0.4);
+  }
+}
+
+/* Title */
+.delete-modal-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #1a1a1a;
+  letter-spacing: -0.5px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .delete-modal-title {
+    color: #f0f0f0;
+  }
+}
+
+/* Message */
+.delete-modal-message {
+  font-size: 16px;
+  color: #4a4a4a;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.delete-modal-message strong {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  .delete-modal-message {
+    color: #b0b0b0;
+  }
+
+  .delete-modal-message strong {
+    color: #f0f0f0;
+  }
+}
+
+/* Warning Text */
+.delete-modal-warning {
+  font-size: 14px;
+  color: #ff6b6b;
+  margin-bottom: 32px;
+  padding: 12px 16px;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  line-height: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  .delete-modal-warning {
+    background: rgba(255, 107, 107, 0.15);
+    border-color: rgba(255, 107, 107, 0.3);
+  }
+}
+
+/* Action Buttons */
+.delete-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.delete-modal-btn {
+  flex: 1;
+  padding: 14px 24px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: 0.3px;
+}
+
+/* Cancel Button */
+.cancel-btn {
+  background: rgba(0, 0, 0, 0.05);
+  color: #4a4a4a;
+}
+
+.cancel-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .cancel-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #d0d0d0;
+  }
+
+  .cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+}
+
+/* Confirm Delete Button */
+.confirm-btn {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  color: white;
+  box-shadow: 0 4px 16px rgba(255, 107, 107, 0.3);
+}
+
+.confirm-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 107, 107, 0.4);
+}
+
+.confirm-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .delete-modal-card {
+    padding: 32px 24px;
+    max-width: 95%;
+  }
+
+  .delete-modal-title {
+    font-size: 24px;
+  }
+
+  .delete-modal-message {
+    font-size: 15px;
+  }
+
+  .delete-modal-warning {
+    font-size: 13px;
+  }
+
+  .delete-modal-actions {
+    flex-direction: column;
+  }
+
+  .delete-modal-btn {
+    width: 100%;
+  }
+}
+/* Add a 3D rotation effect to the modal card */
+.delete-modal-card {
+  transform: rotateY(0deg);
+  transition: transform 0.5s ease-in-out;
+}
+
+.delete-modal-card:hover {
+  transform: rotateY(10deg);
+}
+
+/* Add a unique animation effect to the warning icon */
+.delete-modal-icon {
+  animation: pulse 2s ease-in-out infinite, rotate 4s linear infinite;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Add a 3D effect to the action buttons */
+.delete-modal-btn {
+  transform: translateZ(0px);
+  transition: transform 0.2s ease-in-out;
+}
+
+.delete-modal-btn:hover {
+  transform: translateZ(10px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Add a unique animation effect to the confirm delete button */
+.confirm-btn {
+  animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 107, 107, 1);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+  }
+}

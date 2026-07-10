@@ -1,0 +1,167 @@
+.language-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.language-modal {
+  background: #1e1e1e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  width: 92%;
+  max-width: 550px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.language-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.language-modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.language-modal-close {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.language-modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.language-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.language-option {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.language-option:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.language-option.active {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+  box-shadow: 0 0 0 1px #10b981;
+}
+
+.language-flag {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.language-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #e5e7eb;
+}
+
+.language-native {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.language-footer {
+  padding: 20px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.lang-cancel-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: #e5e7eb;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lang-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.lang-apply-btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: none;
+  background: #10b981;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Poppins', sans-serif;
+}
+
+.lang-apply-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

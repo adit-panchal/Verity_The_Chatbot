@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+*.log
+.vscode/
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/.env
+frontend/.env
