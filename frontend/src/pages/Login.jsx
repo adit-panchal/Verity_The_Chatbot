@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { authService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
-import { User, Mail, Lock, AlertCircle } from "lucide-react";
+import { User, Mail, Lock, AlertCircle, Eye, EyeOff } from "lucide-react";
 import "../styles/AuthScreen.css";
 
 const Login = () => {
@@ -28,6 +28,10 @@ const Login = () => {
   });
   const [registerError, setRegisterError] = useState("");
   const [registerLoading, setRegisterLoading] = useState(false);
+
+  // Password visibility states
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
 
   useEffect(() => {
     // Check if we should start in signup mode
@@ -126,7 +130,7 @@ const Login = () => {
 
             <div className="field-wrapper slide-element">
               <input
-                type="password"
+                type={showLoginPassword ? "text" : "password"}
                 required
                 value={loginData.password}
                 onChange={(e) =>
@@ -135,6 +139,14 @@ const Login = () => {
               />
               <label>{t("password")}</label>
               <Lock className="input-icon" size={20} />
+              <button
+                type="button"
+                className="toggle-password-button"
+                onClick={() => setShowLoginPassword(!showLoginPassword)}
+                aria-label={showLoginPassword ? "Hide password" : "Show password"}
+              >
+                {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
 
             <div className="field-wrapper slide-element">
@@ -209,7 +221,7 @@ const Login = () => {
 
             <div className="field-wrapper slide-element">
               <input
-                type="password"
+                type={showRegisterPassword ? "text" : "password"}
                 required
                 value={registerData.password}
                 onChange={(e) =>
@@ -218,6 +230,14 @@ const Login = () => {
               />
               <label>{t("password")}</label>
               <Lock className="input-icon" size={20} />
+              <button
+                type="button"
+                className="toggle-password-button"
+                onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                aria-label={showRegisterPassword ? "Hide password" : "Show password"}
+              >
+                {showRegisterPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
 
             <div className="field-wrapper slide-element">

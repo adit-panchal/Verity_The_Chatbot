@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// Use environment variable for API URL, fallback to relative path for production
-const API_URL = import.meta.env.VITE_API_URL || "";
+// Use environment variable for API URL, fallback to relative path /api for production on Vercel
+const API_URL = import.meta.env.VITE_API_URL;
 const FULL_API_URL = API_URL ? `${API_URL}/api` : "/api";
 
 console.log("[API] Using API URL:", FULL_API_URL);
