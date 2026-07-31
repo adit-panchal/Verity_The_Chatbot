@@ -38,12 +38,10 @@ const limiter = rateLimit({
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5175",
-      "http://127.0.0.1:5173",
-      "http://127.0.0.1:5175",
-    ],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, serverless) or any origin
+      callback(null, true);
+    },
     credentials: true,
   }),
 );
