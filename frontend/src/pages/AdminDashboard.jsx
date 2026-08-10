@@ -7,11 +7,8 @@ import {
   Activity,
   ArrowLeft,
 } from "lucide-react";
+import { API_BASE_PATH } from "../services/api";
 import "../styles/AdminDashboard.css"; // We will assume you create a CSS file for this
-
-// Use your existing environment variable setup
-const API_BASE_URL = import.meta.env.VITE_API_URL || "";
-const API_ENDPOINT = API_BASE_URL ? `${API_BASE_URL}/api` : "/api";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -31,7 +28,7 @@ const AdminDashboard = () => {
         throw new Error("No authentication token found. Please log in.");
       }
 
-      const response = await fetch(`${API_ENDPOINT}/admin/stats`, {
+      const response = await fetch(`${API_BASE_PATH}/admin/stats`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,

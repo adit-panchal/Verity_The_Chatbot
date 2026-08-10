@@ -1,13 +1,14 @@
 import axios from "axios";
 
-// Use environment variable for API URL, fallback to relative path /api for production on Vercel
-const API_URL = import.meta.env.VITE_API_URL;
-const FULL_API_URL = API_URL ? `${API_URL}/api` : "/api";
+const RAW_API_URL = import.meta.env.VITE_API_URL?.trim() || "";
+const API_ORIGIN = RAW_API_URL.replace(/\/+$|\s+$/g, "");
+export const API_BASE_PATH = API_ORIGIN ? `${API_ORIGIN}/api` : "/api";
+export const UPLOADS_BASE_PATH = API_ORIGIN ? `${API_ORIGIN}/uploads` : "/uploads";
 
-console.log("[API] Using API URL:", FULL_API_URL);
+console.log("[API] Using API URL:", API_BASE_PATH);
 
 const api = axios.create({
-  baseURL: FULL_API_URL,
+  baseURL: API_BASE_PATH,
 });
 
 // Add token to requests

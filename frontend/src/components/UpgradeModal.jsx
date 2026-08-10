@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_PATH } from "../services/api";
 import "../styles/UpgradeModal.css";
 
 const UpgradeModal = ({ isOpen, onClose }) => {
@@ -203,8 +204,7 @@ const UpgradeModal = ({ isOpen, onClose }) => {
       }
 
       // 3. 👉 THE FIX: Tell the backend database about the upgrade!
-      const API_BASE_URL = import.meta.env.VITE_API_URL || "";
-      const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
+      const response = await fetch(`${API_BASE_PATH}/auth/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

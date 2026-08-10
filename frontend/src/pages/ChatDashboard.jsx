@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Menu, TrendingUp } from "lucide-react"; // 👉 Added TrendingUp here!
 import { useLanguage } from "../context/LanguageContext";
-import { chatService } from "../services/api";
+import { chatService, UPLOADS_BASE_PATH } from "../services/api";
 import {
   exportChatAsMarkdown,
   exportChatAsText,
@@ -17,12 +17,6 @@ import PrivacySettingsModal from "../components/PrivacySettingsModal";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 import { useAuth } from "../context/AuthContext";
 import "../styles/ChatDashboard.css";
-
-// Use environment variable for API URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || "";
-const API_ENDPOINT = API_BASE_URL ? `${API_BASE_URL}/api` : "/api";
-
-console.log("[ChatDashboard] Using API endpoint:", API_ENDPOINT);
 
 const PLAN_LIMITS = {
   free: { maxMessages: 10, allowUploads: false, allowGpt4: false },
@@ -130,7 +124,7 @@ const ChatDashboard = () => {
             msg.attachments.forEach((att) => {
               if (att.filename && !att.url) {
                 // Ensure we don't overwrite if already present
-                att.url = `${API_BASE_URL}/uploads/${att.filename}`;
+                att.url = `${UPLOADS_BASE_PATH}/${att.filename}`;
               }
             });
           }
@@ -246,7 +240,7 @@ const ChatDashboard = () => {
         });
       }
 
-      const response = await fetch(`${API_ENDPOINT}/chats`, {
+      const response = await fetch(`${API_BASE_PATH}/chats`, {
         method: "POST",
         headers,
         body,
@@ -492,7 +486,7 @@ const ChatDashboard = () => {
 
       const token = user?.token || "";
 
-      const response = await fetch(`${API_ENDPOINT}/chats`, {
+      const response = await fetch(`${API_BASE_PATH}/chats`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -5,12 +5,9 @@ import {
   useEffect,
   useCallback,
 } from "react";
+import { API_BASE_PATH } from "../services/api";
 
 const AuthContext = createContext();
-
-// Use the same API URL config as api.js
-const API_URL = import.meta.env.VITE_API_URL || "";
-const FULL_API_URL = API_URL ? `${API_URL}/api` : "/api";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
@@ -131,7 +128,7 @@ export const AuthProvider = ({ children }) => {
         }
 
         // Fetch latest user data from backend
-        const response = await fetch(`${FULL_API_URL}/auth/me`, {
+        const response = await fetch(`${API_BASE_PATH}/auth/me`, {
           headers: {
             Authorization: `Bearer ${cachedUser.token}`,
           },
