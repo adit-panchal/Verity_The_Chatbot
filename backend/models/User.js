@@ -122,9 +122,28 @@ userSchema.pre("save", async function () {
   }
 });
 
-// Match user entered password to hashed password in database
+// Match user entered password to hashed password in database.
+// Also supports legacy plain-text passwords that may have been stored before bcrypt was enforced.
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+  if (!this.password) return false;
+
+  if (
+    this.password.startsWith("$2") ||
+    this.password.startsWith("$2a") ||
+    this.password.startsWith("$2b")
+  ) {
+    return await bcrypt.compare(enteredPassword, this.password);
+  }
+
+  const isMatch = this.password === enteredPassword;
+  if (isMatch) {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(enteredPassword, salt);
+    if (typeof this.save === "function") {
+      await this.save();
+    }
+  }
+  return isMatch;
 };
 
 module.exports = mongoose.model("User", userSchema);

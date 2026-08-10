@@ -76,17 +76,18 @@ const loginUser = async (req, res) => {
 
   if (isMatch) {
     console.log(`[Auth] Login successful: ${email}`);
+    const token = generateToken(user._id);
     res.status(200).json({
       _id: user.id,
       name: user.name,
       email: user.email,
       role: user.role,
-      subscription: user.subscription, // <-- Added here too
+      subscription: user.subscription,
       workType: user.workType,
       nickname: user.nickname,
       notifications: user.notifications,
       preferences: user.preferences,
-      token: generateToken(user._id),
+      token,
     });
   } else {
     console.log(`[Auth] Login failed: ${email} (Invalid credentials)`);
