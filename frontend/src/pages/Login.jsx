@@ -144,6 +144,7 @@ const Login = () => {
                 className="toggle-password-button"
                 onClick={() => setShowLoginPassword(!showLoginPassword)}
                 aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                title={showLoginPassword ? "Hide password" : "Show password"}
               >
                 {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -235,6 +236,7 @@ const Login = () => {
                 className="toggle-password-button"
                 onClick={() => setShowRegisterPassword(!showRegisterPassword)}
                 aria-label={showRegisterPassword ? "Hide password" : "Show password"}
+                title={showRegisterPassword ? "Hide password" : "Show password"}
               >
                 {showRegisterPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
