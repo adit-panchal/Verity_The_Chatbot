@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const RAW_API_URL = import.meta.env.VITE_API_URL?.trim() || "";
-const API_ORIGIN = RAW_API_URL.replace(/\/+$|\s+$/g, "");
+const API_ORIGIN = RAW_API_URL.replace(/\/+$|\s+$/g, "").replace(/\/api$/i, "");
 export const API_BASE_PATH = API_ORIGIN ? `${API_ORIGIN}/api` : "/api";
 export const UPLOADS_BASE_PATH = API_ORIGIN ? `${API_ORIGIN}/uploads` : "/uploads";
 

@@ -1,8 +1,8 @@
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
-const path = require("path");
 const rateLimit = require("express-rate-limit");
 const connectDB = require("./config/db");
 const { errorHandler } = require("./middleware/errorHandler");
@@ -48,8 +48,10 @@ app.use(
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: false, limit: "50mb" }));
 
-// Serve uploaded files
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Serve uploaded files (and /api/uploads for Vercel rewrites)
+const uploadsDir = path.join(__dirname, "uploads");
+app.use("/uploads", express.static(uploadsDir));
+app.use("/api/uploads", express.static(uploadsDir));
 
 app.use((req, res, next) => {
   console.log(`>>> [DEBUG] ${req.method} ${req.originalUrl}`);
@@ -69,24 +71,35 @@ app.use((req, res, next) => {
 // const limiter = rateLimit({ ... });
 // app.use('/api/', limiter);
 
-// Routes
-app.use("/api/auth", require("./routes/authRoutes"));
-app.use("/api/chats", require("./routes/chatRoutes"));
-app.use("/api/settings", require("./routes/settingsRoutes"));
-app.use("/api/privacy", require("./routes/privacyRoutes"));
-app.use("/api/2fa", require("./routes/twoFactorRoutes"));
-app.use("/api/admin", require("./routes/adminRoutes"));
-app.use("/api/image", require("./routes/imageRoutes"));
+// Routes — mount under /api (local + Vite proxy) and at root so Vercel
+// catch-all functions that strip the /api prefix still match.
+const mountApiRoutes = (prefix) => {
+  app.use(`${prefix}/auth`, require("./routes/authRoutes"));
+  app.use(`${prefix}/chats`, require("./routes/chatRoutes"));
+  app.use(`${prefix}/settings`, require("./routes/settingsRoutes"));
+  app.use(`${prefix}/privacy`, require("./routes/privacyRoutes"));
+  app.use(`${prefix}/2fa`, require("./routes/twoFactorRoutes"));
+  app.use(`${prefix}/admin`, require("./routes/adminRoutes"));
+  app.use(`${prefix}/image`, require("./routes/imageRoutes"));
+};
+mountApiRoutes("/api");
+mountApiRoutes("");
 
 // Root route
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
+app.use((req, res) => {
+  res.status(404).json({
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
+  });
+});
+
 // Error Handler Middleware
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5005;
 
 if (require.main === module) {
   app.listen(PORT, () => {

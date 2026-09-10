@@ -6,7 +6,10 @@ const connectDB = async () => {
         console.log(`MongoDB Connected: ${conn.connection.host}`);
     } catch (error) {
         console.error(`Error: ${error.message}`);
-        process.exit(1);
+        // Don't kill the Vercel serverless process — login would 404/500 on cold start
+        if (!process.env.VERCEL) {
+            process.exit(1);
+        }
     }
 };
 

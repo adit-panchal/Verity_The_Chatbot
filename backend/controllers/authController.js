@@ -59,40 +59,48 @@ const registerUser = async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 const loginUser = async (req, res) => {
-  let { email, password } = req.body;
-  email = email.toLowerCase().trim();
+  try {
+    let { email, password } = req.body || {};
+    if (!email || !password) {
+      return res.status(400).json({ message: "Please add email and password" });
+    }
 
-  console.log(`[Auth] Login Request - Email: '${email}'`);
+    email = email.toLowerCase().trim();
+    password = String(password).trim();
 
-  // Check for user email
-  const user = await User.findOne({ email }).select("+password");
-  let isMatch = false;
+    console.log(`[Auth] Login Request - Email: '${email}'`);
 
-  if (user) {
-    isMatch = await user.matchPassword(password);
-  } else {
-    console.log(`[Auth] User NOT found for email: ${email}`);
-  }
+    const user = await User.findOne({ email }).select("+password");
+    let isMatch = false;
 
-  if (isMatch) {
-    console.log(`[Auth] Login successful: ${email}`);
-    const token = generateToken(user._id);
-    res.status(200).json({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      subscription: user.subscription,
-      workType: user.workType,
-      nickname: user.nickname,
-      notifications: user.notifications,
-      preferences: user.preferences,
-      token,
-    });
-  } else {
+    if (user) {
+      isMatch = await user.matchPassword(password);
+    } else {
+      console.log(`[Auth] User NOT found for email: ${email}`);
+    }
+
+    if (isMatch) {
+      console.log(`[Auth] Login successful: ${email}`);
+      const token = generateToken(user._id);
+      return res.status(200).json({
+        _id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        subscription: user.subscription,
+        workType: user.workType,
+        nickname: user.nickname,
+        notifications: user.notifications,
+        preferences: user.preferences,
+        token,
+      });
+    }
+
     console.log(`[Auth] Login failed: ${email} (Invalid credentials)`);
-    res.status(401);
-    throw new Error("Invalid credentials");
+    return res.status(401).json({ message: "Invalid credentials" });
+  } catch (error) {
+    console.error("[Auth] Login error:", error);
+    return res.status(500).json({ message: error.message || "Login failed" });
   }
 };
 
