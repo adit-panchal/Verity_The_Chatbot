@@ -1,23 +1,25 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npm install && cd frontend && npm run build",
   "outputDirectory": "frontend/dist",
-  "trailingSlash": false,
-  "functions": {
-    "api/index.js": {
-      "includeFiles": "backend/**"
-    },
-    "api/[[...path]].js": {
-      "includeFiles": "backend/**"
-    }
+  "env": {
+    "NODE_ENV": "production"
   },
-  "rewrites": [
+  "routes": [
     {
-      "source": "/uploads/:path*",
-      "destination": "/api/uploads/:path*"
+      "src": "^/api/(.*)",
+      "dest": "/api/[[...path]].js"
     },
     {
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
+      "src": "/(.*)",
+      "dest": "/index.html",
+      "status": 200
     }
-  ]
+  ],
+  "functions": {
+    "api/[[...path]].js": {
+      "memory": 1024,
+      "maxDuration": 30,
+      "runtime": "nodejs18.x"
+    }
+  }
 }
