@@ -1,57 +1,73 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const bcrypt = require("bcryptjs");
+const UserService = require("../services/userService");
 const { sendWelcomeEmail } = require("../utils/emailService");
 
-// @desc    Register new user
+// Generate JWT Token
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: "7d",
+  });
+};
+
+// @desc    Register a user
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = async (req, res) => {
-  let { name, email, password } = req.body;
-  email = email.toLowerCase().trim();
+  try {
+    let { name, email, password } = req.body;
 
-  if (!name || !email || !password) {
-    res.status(400);
-    throw new Error("Please add all fields");
-  }
+    if (!name || !email || !password) {
+      return res
+        .status(400)
+        .json({ message: "Please provide name, email, and password" });
+    }
 
-  // Check if user exists
-  const userExists = await User.findOne({ email });
+    email = email.toLowerCase().trim();
+    password = String(password).trim();
 
-  if (userExists) {
-    console.log(`[Auth] Registration failed: User already exists (${email})`);
-    res.status(400);
-    throw new Error("User already exists");
-  }
+    // Check if user already exists
+    const existingUser = await UserService.findByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
 
-  // Create user
-  const user = await User.create({
-    name,
-    email,
-    password,
-    role: "user", // Default role for new users
-    subscription: "free", // Default subscription plan
-  });
+    // Create new user
+    const user = await UserService.create({
+      name,
+      email,
+      password,
+      role: "user",
+      subscription: "free",
+    });
 
-  if (user) {
-    // Fire off the welcome email!
-    // We don't use 'await' here so the user doesn't have to wait for the email to send before the UI loads
+    console.log(`[Auth] User registered: ${email}`);
+
+    // Fire off the welcome email (non-blocking)
     sendWelcomeEmail(user.email, user.name).catch(console.error);
 
-    res.status(201).json({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      subscription: user.subscription,
-      workType: user.workType,
-      nickname: user.nickname,
-      notifications: user.notifications,
-      preferences: user.preferences,
-      token: generateToken(user._id),
-    });
-  } else {
-    res.status(400);
-    throw new Error("Invalid user data");
+    if (user) {
+      const token = generateToken(user.id);
+      return res.status(201).json({
+        _id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        subscription: user.subscription,
+        workType: user.work_type,
+        nickname: user.nickname || "",
+        notifications: user.notifications,
+        preferences: user.preferences || "",
+        token,
+      });
+    } else {
+      return res.status(400).json({ message: "Invalid user data" });
+    }
+  } catch (error) {
+    console.error("[Auth] Registration error:", error);
+    return res
+      .status(500)
+      .json({ message: error.message || "Registration failed" });
   }
 };
 
@@ -70,28 +86,28 @@ const loginUser = async (req, res) => {
 
     console.log(`[Auth] Login Request - Email: '${email}'`);
 
-    const user = await User.findOne({ email }).select("+password");
+    const user = await UserService.findByEmail(email);
     let isMatch = false;
 
     if (user) {
-      isMatch = await user.matchPassword(password);
+      isMatch = await UserService.comparePassword(password, user.password);
     } else {
       console.log(`[Auth] User NOT found for email: ${email}`);
     }
 
     if (isMatch) {
       console.log(`[Auth] Login successful: ${email}`);
-      const token = generateToken(user._id);
+      const token = generateToken(user.id);
       return res.status(200).json({
         _id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
         subscription: user.subscription,
-        workType: user.workType,
-        nickname: user.nickname,
+        workType: user.work_type,
+        nickname: user.nickname || "",
         notifications: user.notifications,
-        preferences: user.preferences,
+        preferences: user.preferences || "",
         token,
       });
     }
@@ -108,7 +124,27 @@ const loginUser = async (req, res) => {
 // @route   GET /api/auth/me
 // @access  Private
 const getMe = async (req, res) => {
-  res.status(200).json(req.user);
+  try {
+    const user = await UserService.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      _id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      subscription: user.subscription,
+      workType: user.work_type,
+      nickname: user.nickname || "",
+      notifications: user.notifications,
+      preferences: user.preferences || "",
+    });
+  } catch (error) {
+    console.error("[Auth] Get me error:", error);
+    res.status(500).json({ message: error.message || "Failed to get user" });
+  }
 };
 
 // @desc    Update user profile
@@ -117,66 +153,56 @@ const getMe = async (req, res) => {
 const updateUserProfile = async (req, res) => {
   try {
     console.log("[UpdateProfile] Request received with body:", req.body);
-    console.log("[UpdateProfile] User ID:", req.user?._id);
+    console.log("[UpdateProfile] User ID:", req.user?.id);
 
-    const user = await User.findById(req.user._id);
+    const user = await UserService.findById(req.user.id);
     console.log("[UpdateProfile] User found:", !!user);
 
-    if (user) {
-      user.name = req.body.name !== undefined ? req.body.name : user.name;
-      user.email = req.body.email !== undefined ? req.body.email : user.email;
-      user.workType =
-        req.body.workType !== undefined ? req.body.workType : user.workType;
-      user.nickname =
-        req.body.nickname !== undefined ? req.body.nickname : user.nickname;
-      user.role = req.body.role !== undefined ? req.body.role : user.role;
-      user.subscription =
-        req.body.subscription !== undefined
-          ? req.body.subscription
-          : user.subscription; // <-- Allow subscription updates
-      user.notifications =
-        req.body.notifications !== undefined
-          ? req.body.notifications
-          : user.notifications;
-      user.preferences =
-        req.body.preferences !== undefined
-          ? req.body.preferences
-          : user.preferences;
-
-      if (req.body.password) {
-        user.password = req.body.password;
-      }
-
-      const updatedUser = await user.save();
-      console.log("[UpdateProfile] User saved successfully");
-
-      res.json({
-        _id: updatedUser._id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        role: updatedUser.role,
-        subscription: updatedUser.subscription, // <-- Added to update response
-        workType: updatedUser.workType,
-        nickname: updatedUser.nickname,
-        notifications: updatedUser.notifications,
-        preferences: updatedUser.preferences,
-        token: generateToken(updatedUser._id),
-      });
-    } else {
-      console.log("[UpdateProfile] User not found");
-      res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
-  } catch (error) {
-    console.error("[UpdateProfile Error]:", error);
-    res.status(500).json({ message: error.message });
-  }
-};
 
-// Generate JWT
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: "30d",
-  });
+    // Prepare update data
+    const updateData = {};
+    if (req.body.name !== undefined) updateData.name = req.body.name;
+    if (req.body.email !== undefined)
+      updateData.email = req.body.email.toLowerCase();
+    if (req.body.work_type !== undefined) updateData.work_type = req.body.work_type;
+    if (req.body.workType !== undefined) updateData.work_type = req.body.workType;
+    if (req.body.nickname !== undefined) updateData.nickname = req.body.nickname;
+    if (req.body.role !== undefined) updateData.role = req.body.role;
+    if (req.body.subscription !== undefined)
+      updateData.subscription = req.body.subscription;
+    if (req.body.notifications !== undefined)
+      updateData.notifications = req.body.notifications;
+    if (req.body.preferences !== undefined)
+      updateData.preferences = req.body.preferences;
+    if (req.body.password !== undefined) {
+      // Password will be hashed by UserService
+      updateData.password = req.body.password;
+    }
+
+    // Update user
+    const updatedUser = await UserService.update(req.user.id, updateData);
+
+    console.log("[UpdateProfile] User updated successfully");
+
+    res.status(200).json({
+      _id: updatedUser.id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      subscription: updatedUser.subscription,
+      workType: updatedUser.work_type,
+      nickname: updatedUser.nickname || "",
+      notifications: updatedUser.notifications,
+      preferences: updatedUser.preferences || "",
+      token: generateToken(updatedUser.id),
+    });
+  } catch (error) {
+    console.error("[UpdateProfile] Error:", error);
+    res.status(500).json({ message: error.message || "Update failed" });
+  }
 };
 
 module.exports = {

@@ -1,85 +1,46 @@
-const mongoose = require("mongoose");
+// Stub model for Supabase migration
+// All security logging should use Supabase directly
 
-const securityLogSchema = mongoose.Schema(
-  {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    action: {
-      type: String,
-      required: true,
-      enum: [
-        "2fa_enabled",
-        "2fa_disabled",
-        "2fa_verified_success",
-        "2fa_verified_failed",
-        "2fa_otp_sent",
-        "2fa_backup_code_used",
-        "2fa_backup_codes_generated",
-        "2fa_account_locked",
-        "2fa_device_trusted",
-        "2fa_device_removed",
-      ],
-    },
-    method: {
-      type: String,
-      enum: ["email", "totp", "backup_code", "none"],
-      default: "none",
-    },
-    ip: {
-      type: String,
-      required: true,
-    },
-    userAgent: {
-      type: String,
-    },
-    success: {
-      type: Boolean,
-      required: true,
-    },
-    metadata: {
-      type: mongoose.Schema.Types.Mixed,
-      default: {},
-    },
-    timestamp: {
-      type: Date,
-      default: Date.now,
-    },
+const supabase = require("../config/supabase");
+
+const SecurityLog = {
+  logEvent: async (userId, eventType, success, req, metadata = {}) => {
+    try {
+      const { error } = await supabase.from("security_logs").insert([
+        {
+          user_id: userId,
+          event_type: eventType,
+          success,
+          ip_address: req.ip || req.connection?.remoteAddress || "unknown",
+          user_agent: req.headers["user-agent"] || "unknown",
+          metadata: JSON.stringify(metadata),
+          created_at: new Date().toISOString(),
+        },
+      ]);
+
+      if (error) {
+        console.error("[SecurityLog] Error logging event:", error);
+      }
+    } catch (error) {
+      console.error("[SecurityLog] Error in logEvent:", error);
+    }
   },
-  {
-    timestamps: true,
-  }
-);
 
-// Index for faster queries
-securityLogSchema.index({ user: 1, timestamp: -1 });
-securityLogSchema.index({ action: 1, timestamp: -1 });
+  find: async (query) => {
+    try {
+      const { data, error } = await supabase
+        .from("security_logs")
+        .select("*")
+        .match(query)
+        .order("created_at", { ascending: false });
 
-// Static method to log security event
-securityLogSchema.statics.logEvent = async function (
-  userId,
-  action,
-  success,
-  req,
-  metadata = {}
-) {
-  try {
-    const ip = req.ip || req.connection.remoteAddress || "unknown";
-    const userAgent = req.headers["user-agent"] || "unknown";
-
-    await this.create({
-      user: userId,
-      action,
-      success,
-      ip,
-      userAgent,
-      metadata,
-    });
-  } catch (error) {
-    console.error("Error logging security event:", error);
-  }
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("[SecurityLog] Error in find:", error);
+      throw error;
+    }
+  },
 };
 
-module.exports = mongoose.model("SecurityLog", securityLogSchema);
+module.exports = SecurityLog;

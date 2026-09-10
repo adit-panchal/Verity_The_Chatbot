@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const UserService = require("../services/userService");
 
 const protect = async (req, res, next) => {
   let token;
@@ -16,12 +16,24 @@ const protect = async (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Get user from the token
-      const user = await User.findById(decoded.id).select("-password");
+      // Get user from Supabase
+      const user = await UserService.findById(decoded.id);
       if (!user) {
         return res.status(401).json({ message: "User no longer exists" });
       }
-      req.user = user;
+
+      // Attach user to request (without password)
+      req.user = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        subscription: user.subscription,
+        work_type: user.work_type,
+        nickname: user.nickname,
+        notifications: user.notifications,
+        preferences: user.preferences,
+      };
 
       return next();
     } catch (error) {
@@ -47,15 +59,12 @@ const authorize = (...roles) => {
   };
 };
 
-module.exports = { protect, authorize };
-
-// Add this below your existing 'protect' function
+// Check if user is admin
 const isAdmin = (req, res, next) => {
   if (req.user && req.user.role && req.user.role.toLowerCase() === "admin") {
     next();
   } else {
-    res.status(403);
-    throw new Error("Not authorized as an admin");
+    res.status(403).json({ message: "Not authorized as an admin" });
   }
 };
 
@@ -70,7 +79,21 @@ const optionalProtect = async (req, res, next) => {
     try {
       token = req.headers.authorization.split(" ")[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select("-password");
+      const user = await UserService.findById(decoded.id);
+
+      if (user) {
+        req.user = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          subscription: user.subscription,
+          work_type: user.work_type,
+          nickname: user.nickname,
+          notifications: user.notifications,
+          preferences: user.preferences,
+        };
+      }
     } catch (error) {
       console.error("Optional Auth Error:", error.message);
       // Don't return error, just continue as guest
@@ -79,4 +102,4 @@ const optionalProtect = async (req, res, next) => {
   next();
 };
 
-module.exports = { protect, isAdmin, optionalProtect };
+module.exports = { protect, authorize, isAdmin, optionalProtect };

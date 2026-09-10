@@ -1,149 +1,81 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
+// Stub model for Supabase migration
+// All user operations should use UserService instead of this model
 
-const userSchema = mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: [true, "Please add a name"],
-    },
-    email: {
-      type: String,
-      required: [true, "Please add an email"],
-      unique: true,
-      trim: true,
-      lowercase: true,
-      match: [
-        /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-        "Please add a valid email",
-      ],
-    },
-    password: {
-      type: String,
-      required: [true, "Please add a password"],
-      minlength: 6,
-      select: false,
-    },
-    workType: {
-      type: String,
-      default: "Engineering",
-    },
-    nickname: {
-      type: String,
-      default: "",
-    },
-    preferences: {
-      type: String,
-      default: "",
-    },
+const UserService = require("../services/userService");
 
-    notifications: {
-      type: Boolean,
-      default: true,
-    },
-    role: {
-      type: String,
-      enum: ["user", "admin"],
-      default: "user",
-    },
-    privacySettings: {
-      dataRetentionDays: {
-        type: Number,
-        default: 365, // Default 1 year
-      },
-      collectAnalytics: {
-        type: Boolean,
-        default: true,
-      },
-      encryptionEnabled: {
-        type: Boolean,
-        default: true,
-      },
-    },
-    settings: {
-      theme: {
-        type: String,
-        default: "dark",
-      },
-      language: {
-        type: String,
-        default: "en",
-      },
-      defaultModel: {
-        type: String,
-        default: "Groq-pro",
-      },
-      useSearch: {
-        type: Boolean,
-        default: false,
-      },
-      temperature: {
-        type: Number,
-        default: 0.6,
-      },
-    },
-    twoFactorEnabled: {
-      type: Boolean,
-      default: false,
-    },
-    twoFactorMethod: {
-      type: String,
-      enum: ["none", "email", "totp"],
-      default: "none",
-    },
-    twoFactorSecret: {
-      type: String,
-      select: false, // Don't return by default
-    },
-    subscription: {
-      type: String,
-      enum: ["free", "pro", "enterprise"],
-      default: "free",
-    },
-  },
+// This is a stub to maintain backward compatibility
+// DO NOT use this model directly - use UserService instead
 
-  {
-    timestamps: true,
-  },
-);
-
-// Encrypt password using bcrypt
-userSchema.pre("save", async function () {
-  // If password is not modified, just proceed
-  if (!this.isModified("password")) {
-    return;
-  }
-
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-  } catch (err) {
-    throw err;
-  }
-});
-
-// Match user entered password to hashed password in database.
-// Also supports legacy plain-text passwords that may have been stored before bcrypt was enforced.
-userSchema.methods.matchPassword = async function (enteredPassword) {
-  if (!this.password) return false;
-
-  if (
-    this.password.startsWith("$2") ||
-    this.password.startsWith("$2a") ||
-    this.password.startsWith("$2b")
-  ) {
-    return await bcrypt.compare(enteredPassword, this.password);
-  }
-
-  const isMatch = this.password === enteredPassword;
-  if (isMatch) {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(enteredPassword, salt);
-    if (typeof this.save === "function") {
-      await this.save();
+const User = {
+  findOne: async (query) => {
+    try {
+      if (query.email) {
+        return UserService.findByEmail(query.email);
+      }
+      throw new Error("Use UserService.findByEmail() instead");
+    } catch (error) {
+      console.error("[User Model] Error:", error);
+      throw error;
     }
-  }
-  return isMatch;
+  },
+
+  findById: async (id) => {
+    try {
+      return UserService.findById(id);
+    } catch (error) {
+      console.error("[User Model] Error:", error);
+      throw error;
+    }
+  },
+
+  create: async (data) => {
+    try {
+      return UserService.create(data);
+    } catch (error) {
+      console.error("[User Model] Error:", error);
+      throw error;
+    }
+  },
+
+  find: async (query = {}) => {
+    try {
+      // For backward compatibility
+      return UserService.getAllUsers();
+    } catch (error) {
+      console.error("[User Model] Error:", error);
+      throw error;
+    }
+  },
+
+  findByIdAndUpdate: async (id, update) => {
+    try {
+      // Extract the actual update data
+      const updateData = update.$set || update;
+      return UserService.update(id, updateData);
+    } catch (error) {
+      console.error("[User Model] Error:", error);
+      throw error;
+    }
+  },
+
+  findByIdAndDelete: async (id) => {
+    try {
+      return UserService.delete(id);
+    } catch (error) {
+      console.error("[User Model] Error:", error);
+      throw error;
+    }
+  },
+
+  countDocuments: async () => {
+    try {
+      const users = await UserService.getAllUsers();
+      return users.length;
+    } catch (error) {
+      console.error("[User Model] Error:", error);
+      throw error;
+    }
+  },
 };
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = User;

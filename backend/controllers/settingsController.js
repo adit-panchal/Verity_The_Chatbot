@@ -1,4 +1,5 @@
-const User = require("../models/User");
+const UserService = require("../services/userService");
+const supabase = require("../config/supabase");
 
 /**
  * User Settings Controller
@@ -8,10 +9,8 @@ const User = require("../models/User");
 // Get user settings
 exports.getSettings = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id || req.userId;
-    const user = await User.findById(userId).select(
-      "settings preferences privacySettings",
-    );
+    const userId = req.user.id || req.user._id;
+    const user = await UserService.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -20,16 +19,16 @@ exports.getSettings = async (req, res) => {
     res.json({
       success: true,
       settings: {
-        defaultModel: user.settings?.defaultModel || "Groq-pro",
-        useSearch: user.settings?.useSearch || false,
-        temperature: user.settings?.temperature || 0.6,
-        language: user.settings?.language || "en",
-        theme: user.settings?.theme || "dark",
+        defaultModel: user.default_model || "Groq-pro",
+        useSearch: user.use_search || false,
+        temperature: user.temperature || 0.6,
+        language: user.language || "en",
+        theme: user.theme || "dark",
       },
       privacy: {
-        encryptionEnabled: user.privacySettings?.encryptionEnabled ?? true,
-        collectAnalytics: user.privacySettings?.collectAnalytics ?? true,
-        dataRetentionDays: user.privacySettings?.dataRetentionDays || 365,
+        encryptionEnabled: user.encryption_enabled ?? true,
+        collectAnalytics: user.collect_analytics ?? true,
+        dataRetentionDays: user.data_retention_days || 365,
       },
       preferences: user.preferences || {},
     });
@@ -44,12 +43,12 @@ exports.getSettings = async (req, res) => {
 exports.updateSettings = async (req, res) => {
   try {
     console.log("[UpdateSettings] Request received:", req.body);
-    const userId = req.user._id || req.user.id || req.userId;
-    const { 
-      defaultModel, 
-      useSearch, 
-      temperature, 
-      language, 
+    const userId = req.user.id || req.user._id;
+    const {
+      defaultModel,
+      useSearch,
+      temperature,
+      language,
       theme,
       name,
       email,
@@ -57,52 +56,40 @@ exports.updateSettings = async (req, res) => {
       workType,
       preferences,
       notifications,
-      // Privacy fields
       encryptionEnabled,
       collectAnalytics,
-      dataRetentionDays
+      dataRetentionDays,
     } = req.body;
 
     const updateData = {};
 
-    if (defaultModel) updateData["settings.defaultModel"] = defaultModel;
-    if (useSearch !== undefined) updateData["settings.useSearch"] = useSearch;
+    if (defaultModel) updateData.default_model = defaultModel;
+    if (useSearch !== undefined) updateData.use_search = useSearch;
     if (temperature !== undefined)
-      updateData["settings.temperature"] = Math.max(
-        0,
-        Math.min(2, temperature),
-      );
-      if (name !== undefined) updateData["name"] = name;
-      console.log("[UpdateSettings] Name:", name);
-      if (email !== undefined) updateData["email"] = email;
-      console.log("[UpdateSettings] Email:", email);
-      if (nickname !== undefined) updateData["nickname"] = nickname;
-      console.log("[UpdateSettings] Nickname:", nickname);
-      if (workType !== undefined) updateData["workType"] = workType;
-      console.log("[UpdateSettings] Work Type:", workType);
-      if (preferences !== undefined) updateData["preferences"] = preferences;
-      console.log("[UpdateSettings] Preferences:", preferences);
-      if (notifications !== undefined) updateData["notifications"] = notifications;
-      console.log("[UpdateSettings] Notifications:", notifications);
-      if (language !== undefined) updateData["settings.language"] = language;
-      console.log("[UpdateSettings] Language:", language);
-      if (theme !== undefined) updateData["settings.theme"] = theme;
-      console.log("[UpdateSettings] Theme:", theme);
+      updateData.temperature = Math.max(0, Math.min(2, temperature));
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email.toLowerCase();
+    if (nickname !== undefined) updateData.nickname = nickname;
+    if (workType !== undefined) updateData.work_type = workType;
+    if (preferences !== undefined) updateData.preferences = preferences;
+    if (notifications !== undefined) updateData.notifications = notifications;
+    if (language !== undefined) updateData.language = language;
+    if (theme !== undefined) updateData.theme = theme;
+    if (encryptionEnabled !== undefined)
+      updateData.encryption_enabled = encryptionEnabled;
+    if (collectAnalytics !== undefined)
+      updateData.collect_analytics = collectAnalytics;
+    if (dataRetentionDays !== undefined)
+      updateData.data_retention_days = dataRetentionDays;
 
-      // Privacy updates
-      if (encryptionEnabled !== undefined) updateData["privacySettings.encryptionEnabled"] = encryptionEnabled;
-      if (collectAnalytics !== undefined) updateData["privacySettings.collectAnalytics"] = collectAnalytics;
-      if (dataRetentionDays !== undefined) updateData["privacySettings.dataRetentionDays"] = dataRetentionDays;
-      
-      console.log("[UpdateSettings] Update data:", updateData);
+    console.log("[UpdateSettings] Update data:", updateData);
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $set: updateData },
-      { new: true, runValidators: true },
-    );
+    const user = await UserService.update(userId, updateData);
 
-    res.json(user);
+    res.json({
+      success: true,
+      settings: user,
+    });
   } catch (error) {
     res
       .status(500)
@@ -113,28 +100,28 @@ exports.updateSettings = async (req, res) => {
 // Update privacy settings
 exports.updatePrivacy = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id || req.userId;
+    const userId = req.user.id || req.user._id;
     const { encryptionEnabled, collectAnalytics, dataRetentionDays } = req.body;
 
     const updateData = {};
 
     if (encryptionEnabled !== undefined)
-      updateData["privacySettings.encryptionEnabled"] = encryptionEnabled;
+      updateData.encryption_enabled = encryptionEnabled;
     if (collectAnalytics !== undefined)
-      updateData["privacySettings.collectAnalytics"] = collectAnalytics;
+      updateData.collect_analytics = collectAnalytics;
     if (dataRetentionDays !== undefined)
-      updateData["privacySettings.dataRetentionDays"] = dataRetentionDays;
+      updateData.data_retention_days = dataRetentionDays;
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $set: updateData },
-      { new: true },
-    );
+    const user = await UserService.update(userId, updateData);
 
     res.json({
       success: true,
       message: "Privacy settings updated",
-      privacy: user.privacySettings,
+      privacy: {
+        encryptionEnabled: user.encryption_enabled,
+        collectAnalytics: user.collect_analytics,
+        dataRetentionDays: user.data_retention_days,
+      },
     });
   } catch (error) {
     res
@@ -146,23 +133,21 @@ exports.updatePrivacy = async (req, res) => {
 // Set custom system prompt
 exports.setSystemPrompt = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id || req.userId;
+    const userId = req.user.id || req.user._id;
     const { systemPrompt } = req.body;
 
     if (!systemPrompt || systemPrompt.trim().length === 0) {
       return res.status(400).json({ message: "System prompt cannot be empty" });
     }
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $set: { "settings.systemPrompt": systemPrompt } },
-      { new: true },
-    );
+    const user = await UserService.update(userId, {
+      system_prompt: systemPrompt,
+    });
 
     res.json({
       success: true,
       message: "System prompt updated",
-      systemPrompt: user.settings.systemPrompt,
+      systemPrompt: user.system_prompt,
     });
   } catch (error) {
     res
@@ -174,12 +159,12 @@ exports.setSystemPrompt = async (req, res) => {
 // Get system prompt
 exports.getSystemPrompt = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id || req.userId;
-    const user = await User.findById(userId).select("settings.systemPrompt");
+    const userId = req.user.id || req.user._id;
+    const user = await UserService.findById(userId);
 
     res.json({
       success: true,
-      systemPrompt: user.settings?.systemPrompt || null,
+      systemPrompt: user?.system_prompt || null,
     });
   } catch (error) {
     res
@@ -191,10 +176,9 @@ exports.getSystemPrompt = async (req, res) => {
 // Request data export (for GDPR compliance)
 exports.requestDataExport = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id || req.userId;
-    // Mark for export in background job
-    await User.findByIdAndUpdate(userId, {
-      $set: { dataExportRequested: new Date() },
+    const userId = req.user.id || req.user._id;
+    await UserService.update(userId, {
+      data_export_requested: new Date().toISOString(),
     });
 
     res.json({
@@ -212,7 +196,7 @@ exports.requestDataExport = async (req, res) => {
 // Delete user account and all data
 exports.deleteAccount = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id || req.userId;
+    const userId = req.user.id || req.user._id;
     const { password } = req.body;
 
     if (!password) {
@@ -221,18 +205,25 @@ exports.deleteAccount = async (req, res) => {
         .json({ message: "Password required for account deletion" });
     }
 
-    const user = await User.findById(userId);
+    const user = await UserService.findByEmail(req.user.email);
 
     // Verify password
-    const isMatch = await user.matchPassword(password);
+    const isMatch = await UserService.comparePassword(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid password" });
     }
 
     // Delete user and associated chats
-    const Chat = require("../models/Chat");
-    await Chat.deleteMany({ user: userId });
-    await User.findByIdAndDelete(userId);
+    const { error: chatError } = await supabase
+      .from("chats")
+      .delete()
+      .eq("user_id", userId);
+
+    if (chatError) {
+      throw chatError;
+    }
+
+    await UserService.delete(userId);
 
     res.json({
       success: true,
@@ -248,27 +239,34 @@ exports.deleteAccount = async (req, res) => {
 // Get usage statistics
 exports.getUsageStats = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id || req.userId;
-    const Chat = require("../models/Chat");
+    const userId = req.user.id || req.user._id;
 
-    const chats = await Chat.find({ user: userId });
-    const totalMessages = chats.reduce(
-      (sum, chat) => sum + chat.messages.length,
-      0,
-    );
-    const totalChats = chats.length;
+    const { data: chats, error } = await supabase
+      .from("chats")
+      .select("*")
+      .eq("user_id", userId);
+
+    if (error) {
+      throw error;
+    }
+
+    const totalChats = chats?.length || 0;
+    const totalMessages = chats?.reduce(
+      (sum, chat) => sum + (chat.messages?.length || 0),
+      0
+    ) || 0;
 
     // Calculate approximate tokens (rough estimate: 1 token ≈ 4 characters)
     const totalTokens = Math.round(
-      chats.reduce((sum, chat) => {
+      chats?.reduce((sum, chat) => {
         return (
           sum +
-          chat.messages.reduce(
-            (msgSum, msg) => msgSum + msg.content.length / 4,
-            0,
-          )
+          (chat.messages?.reduce(
+            (msgSum, msg) => msgSum + (msg.content?.length || 0) / 4,
+            0
+          ) || 0)
         );
-      }, 0),
+      }, 0) || 0
     );
 
     res.json({

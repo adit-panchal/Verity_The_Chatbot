@@ -1,114 +1,100 @@
-const mongoose = require("mongoose");
+// Stub model for Supabase migration
+// This file is kept for backward compatibility
+// All chat operations should use Supabase directly
 
-const attachmentSchema = mongoose.Schema(
-  {
-    originalName: {
-      type: String,
-      required: true,
-    },
-    filename: {
-      type: String,
-      required: true,
-    },
-    mimetype: {
-      type: String,
-      required: true,
-    },
-    size: {
-      type: Number,
-      required: true,
-    },
-    uploadDate: {
-      type: Date,
-      default: Date.now,
-    },
-  },
-  {
-    _id: false,
-  },
-);
+const supabase = require("../config/supabase");
 
-const messageSchema = mongoose.Schema(
-  {
-    role: {
-      type: String,
-      enum: ["user", "assistant"],
-      required: true,
-    },
-    content: {
-      type: String,
-      required: true,
-    },
-    searchResults: {
-      type: mongoose.Schema.Types.Mixed,
-      default: null,
-    },
-    usedSearch: {
-      type: Boolean,
-      default: false,
-    },
-    attachments: [attachmentSchema],
-    extractedText: {
-      type: String,
-      default: null,
-    },
-  },
-  {
-    timestamps: true,
-  },
-);
+// Mock mongoose-like interface for Chat model
+const Chat = {
+  find: async (query) => {
+    try {
+      const { data, error } = await supabase
+        .from("chats")
+        .select("*")
+        .match(query)
+        .order("updated_at", { ascending: false })
+        .limit(50);
 
-const chatSchema = mongoose.Schema(
-  {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-    messages: [messageSchema],
-    title: {
-      type: String,
-      default: "New Chat",
-    },
-    settings: {
-      model: {
-        type: String,
-        default: "llama-3.3-70b-versatile",
-      },
-      useSearch: {
-        type: Boolean,
-        default: false,
-      },
-      temperature: {
-        type: Number,
-        min: 0,
-        max: 2,
-        default: 0.6,
-      },
-      systemPrompt: {
-        type: String,
-        default: null,
-      },
-      encrypted: {
-        type: Boolean,
-        default: false,
-      },
-    },
-    summary: {
-      type: String,
-      default: null,
-    },
-    tags: [String],
-    isArchived: {
-      type: Boolean,
-      default: false,
-    },
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("[Chat Model] Error in find:", error);
+      throw error;
+    }
   },
-  {
-    timestamps: true,
+
+  findById: async (id) => {
+    try {
+      const { data, error } = await supabase
+        .from("chats")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("[Chat Model] Error in findById:", error);
+      throw error;
+    }
   },
-);
 
-// Optimize queries for finding user chats sorted by date
-chatSchema.index({ user: 1, updatedAt: -1 });
+  create: async (data) => {
+    try {
+      const { data: result, error } = await supabase
+        .from("chats")
+        .insert([data])
+        .select()
+        .single();
 
-module.exports = mongoose.model("Chat", chatSchema);
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      console.error("[Chat Model] Error in create:", error);
+      throw error;
+    }
+  },
+
+  updateOne: async (query, data) => {
+    try {
+      const { data: result, error } = await supabase
+        .from("chats")
+        .update(data)
+        .match(query)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return result;
+    } catch (error) {
+      console.error("[Chat Model] Error in updateOne:", error);
+      throw error;
+    }
+  },
+
+  deleteOne: async (query) => {
+    try {
+      const { error } = await supabase.from("chats").delete().match(query);
+
+      if (error) throw error;
+      return { deletedCount: 1 };
+    } catch (error) {
+      console.error("[Chat Model] Error in deleteOne:", error);
+      throw error;
+    }
+  },
+
+  deleteMany: async (query) => {
+    try {
+      const { error } = await supabase.from("chats").delete().match(query);
+
+      if (error) throw error;
+      return { deletedCount: 1 };
+    } catch (error) {
+      console.error("[Chat Model] Error in deleteMany:", error);
+      throw error;
+    }
+  },
+};
+
+module.exports = Chat;

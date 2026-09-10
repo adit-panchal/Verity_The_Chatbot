@@ -3,39 +3,15 @@ require("dotenv").config({ path: path.join(__dirname, ".env") });
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
-const rateLimit = require("express-rate-limit");
 const connectDB = require("./config/db");
 const { errorHandler } = require("./middleware/errorHandler");
-
-const helmet = require("helmet");
-const xss = require("xss-clean");
-const hpp = require("hpp");
-const mongoSanitize = require("express-mongo-sanitize");
 
 const app = express();
 
 // Connect to Database
 connectDB();
 
-// Security Headers
-// app.use(helmet());
-
-// Prevent XSS attacks
-// app.use(xss());
-
-// Prevent NoSQL injections
-// app.use(mongoSanitize());
-
-// Prevent http param pollution
-// app.use(hpp());
-
-// Rate Limiting
-const limiter = rateLimit({
-  windowMs: 10 * 60 * 1000, // 10 minutes
-  max: 1000, // Increased limit for dev
-});
-// app.use("/api", limiter); // Temporarily disabled to resolve 429 block
-
+// Supabase handles security, removed old MongoDB sanitization middlewares
 app.use(
   cors({
     origin: (origin, callback) => {
