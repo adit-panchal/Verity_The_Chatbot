@@ -2,6 +2,12 @@
   "buildCommand": "npm run build --prefix frontend",
   "outputDirectory": "frontend/dist",
   "installCommand": "npm install",
+  "git": {
+    "deploymentEnabled": false
+  },
+  "github": {
+    "enabled": false
+  },
   "env": {
     "NODE_ENV": "production"
   },
